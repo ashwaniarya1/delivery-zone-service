@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: deliveryzone
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d deliveryzone"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
