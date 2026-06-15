@@ -3,8 +3,6 @@ package com.justeat.deliveryzone.service;
 import com.justeat.deliveryzone.api.dto.RestaurantRequest;
 import com.justeat.deliveryzone.api.dto.UploadResponse;
 import com.justeat.deliveryzone.domain.Restaurant;
-import com.justeat.deliveryzone.repository.DeliveryGroupRepository;
-import com.justeat.deliveryzone.repository.GroupMemberRepository;
 import com.justeat.deliveryzone.repository.RestaurantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,23 +17,18 @@ import java.util.stream.Collectors;
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
-    private final DeliveryGroupRepository deliveryGroupRepository;
-    private final GroupMemberRepository groupMemberRepository;
+    private final GroupingService groupingService;
 
     public RestaurantService(RestaurantRepository restaurantRepository,
-                             DeliveryGroupRepository deliveryGroupRepository,
-                             GroupMemberRepository groupMemberRepository) {
+                             GroupingService groupingService) {
         this.restaurantRepository = restaurantRepository;
-        this.deliveryGroupRepository = deliveryGroupRepository;
-        this.groupMemberRepository = groupMemberRepository;
+        this.groupingService = groupingService;
     }
 
     @Transactional
     public UploadResponse replaceAll(List<RestaurantRequest> requests) {
         validateNoDuplicateIds(requests);
 
-        groupMemberRepository.deleteAllInBatch();
-        deliveryGroupRepository.deleteAllInBatch();
         restaurantRepository.deleteAllInBatch();
 
         List<Restaurant> entities = requests.stream()
@@ -44,7 +37,9 @@ public class RestaurantService {
 
         restaurantRepository.saveAllAndFlush(entities);
 
-        return new UploadResponse("success", entities.size(), "Restaurants successfully stored");
+        int groupCount = groupingService.recomputeGroups();
+
+        return new UploadResponse("success", entities.size(), groupCount, "Restaurants successfully stored");
     }
 
     private void validateNoDuplicateIds(List<RestaurantRequest> requests) {

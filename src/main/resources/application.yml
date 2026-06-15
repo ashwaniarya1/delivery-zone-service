@@ -3,10 +3,19 @@ spring:
     url: jdbc:postgresql://localhost:5432/deliveryzone
     username: app
     password: app
+    hikari:
+      data-source-properties:
+        reWriteBatchedInserts: true
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
   flyway:
     enabled: true
 
